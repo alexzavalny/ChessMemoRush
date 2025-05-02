@@ -116,27 +116,18 @@ const app = Vue.createApp({
         },
         
         generateNewPosition() {
-            this.targetPosition = generatePosition();
-            this.targetBoard.position(this.targetPosition);
-            // Reset player board with dragging disabled
-            document.querySelector('.game-container').classList.remove('memorizing');
-            this.playerBoard.destroy();
-            this.playerBoard = Chessboard('playerBoard', {
-                draggable: false,
-                position: 'start',
-                pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png',
-                sparePieces: true
-            });
+            const position = generatePosition();
+            this.targetPosition = this.targetBoard.position(position);
             this.playerBoard.clear();
             this.positionHidden = false;
             this.showingResults = false;
+            document.querySelector('.game-container').classList.remove('memorizing');
         },
         
         startMemorizing() {
             this.positionHidden = true;
             // Store the current position before clearing
-            const currentPosition = this.targetBoard.position();
-            this.targetPosition = currentPosition;
+            this.targetPosition = this.targetBoard.position();
             this.targetBoard.clear();
             // Enable dragging after clicking Ready
             document.querySelector('.game-container').classList.add('memorizing');
@@ -153,7 +144,6 @@ const app = Vue.createApp({
         submitPosition() {
             // Get positions as objects like {a1: 'wP', b1: 'wN', ...}
             const playerPosition = this.playerBoard.position();
-            const targetPosition = this.targetBoard.position();
             
             let correctPieces = 0;
             const squares = [
@@ -170,8 +160,8 @@ const app = Vue.createApp({
             // Compare each square
             squares.forEach(square => {
                 if (playerPosition[square] && 
-                    targetPosition[square] && 
-                    playerPosition[square] === targetPosition[square]) {
+                    this.targetPosition[square] && 
+                    playerPosition[square] === this.targetPosition[square]) {
                     correctPieces++;
                 }
             });
@@ -183,7 +173,7 @@ const app = Vue.createApp({
 
             // Debug log
             console.log('Player pieces:', playerPosition);
-            console.log('Target pieces:', targetPosition);
+            console.log('Target pieces:', this.targetPosition);
             console.log('Correct pieces:', correctPieces);
             console.log('New total score:', this.score);
         },
