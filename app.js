@@ -82,7 +82,7 @@ const app = Vue.createApp({
                 sparePieces: true
             };
             
-            this.targetBoard = Chessboard('targetBoard', { ...config, draggable: false, sparePieces: false });
+            this.targetBoard = Chessboard('targetBoard', { ...config, draggable: false });
             this.playerBoard = Chessboard('playerBoard', config);
         },
         
@@ -134,6 +134,9 @@ const app = Vue.createApp({
         
         startMemorizing() {
             this.positionHidden = true;
+            // Store the current position before clearing
+            const currentPosition = this.targetBoard.position();
+            this.targetPosition = currentPosition;
             this.targetBoard.clear();
             // Enable dragging after clicking Ready
             document.querySelector('.game-container').classList.add('memorizing');
@@ -148,41 +151,41 @@ const app = Vue.createApp({
         },
         
         submitPosition() {
-            const playerFen = this.playerBoard.fen();
-            const targetChess = new Chess();
-            const playerChess = new Chess();
+            // Get positions as objects like {a1: 'wP', b1: 'wN', ...}
+            const playerPosition = this.playerBoard.position();
+            const targetPosition = this.targetBoard.position();
             
-            targetChess.load(this.targetPosition);
-            playerChess.load(playerFen);
-            
-            let correctSquares = 0;
-            const totalPieces = this.targetPosition.split(' ')[0].match(/[prnbqkPRNBQK]/g)?.length || 0;
-            
-            // Compare positions
-            for (let i = 0; i < 64; i++) {
-                const file = String.fromCharCode(97 + (i % 8));
-                const rank = Math.floor(i / 8) + 1;
-                const square = `${file}${rank}`;
-                
-                const targetPiece = targetChess.get(square);
-                const playerPiece = playerChess.get(square);
-                
-                if ((!targetPiece && !playerPiece) || 
-                    (targetPiece && playerPiece && 
-                     targetPiece.type === playerPiece.type && 
-                     targetPiece.color === playerPiece.color)) {
-                    correctSquares++;
+            let correctPieces = 0;
+            const squares = [
+                'a1', 'b1', 'c1', 'd1', 'e1', 'f1', 'g1', 'h1',
+                'a2', 'b2', 'c2', 'd2', 'e2', 'f2', 'g2', 'h2',
+                'a3', 'b3', 'c3', 'd3', 'e3', 'f3', 'g3', 'h3',
+                'a4', 'b4', 'c4', 'd4', 'e4', 'f4', 'g4', 'h4',
+                'a5', 'b5', 'c5', 'd5', 'e5', 'f5', 'g5', 'h5',
+                'a6', 'b6', 'c6', 'd6', 'e6', 'f6', 'g6', 'h6',
+                'a7', 'b7', 'c7', 'd7', 'e7', 'f7', 'g7', 'h7',
+                'a8', 'b8', 'c8', 'd8', 'e8', 'f8', 'g8', 'h8'
+            ];
+
+            // Compare each square
+            squares.forEach(square => {
+                if (playerPosition[square] && 
+                    targetPosition[square] && 
+                    playerPosition[square] === targetPosition[square]) {
+                    correctPieces++;
                 }
-            }
+            });
             
-            // Show results
+            // Show results and update score
             this.targetBoard.position(this.targetPosition);
             this.showingResults = true;
-            
-            // Update score based on accuracy
-            const accuracy = correctSquares / 64;
-            const pieceScore = Math.round((correctSquares / totalPieces) * 100);
-            this.score += pieceScore;
+            this.score += correctPieces;
+
+            // Debug log
+            console.log('Player pieces:', playerPosition);
+            console.log('Target pieces:', targetPosition);
+            console.log('Correct pieces:', correctPieces);
+            console.log('New total score:', this.score);
         },
         
         nextPosition() {
